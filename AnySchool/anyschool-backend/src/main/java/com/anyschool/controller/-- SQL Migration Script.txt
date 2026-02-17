@@ -1,0 +1,41 @@
+-- SQL Migration Script
+-- Add admin_user_id column to schools table
+-- Add request_type and linked_school_id to school_requests table
+
+-- Add admin_user_id to schools (if not exists)
+ALTER TABLE schools ADD COLUMN IF NOT EXISTS admin_user_id BIGINT;
+
+-- Add foreign key constraint for admin_user_id (ignore if already exists)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints 
+                   WHERE constraint_name = 'fk_schools_admin_user') THEN
+        ALTER TABLE schools ADD CONSTRAINT fk_schools_admin_user 
+            FOREIGN KEY (admin_user_id) REFERENCES users(id) ON DELETE SET NULL;
+    END IF;
+END $$;
+
+-- Add phone to schools if not exists
+ALTER TABLE schools ADD COLUMN IF NOT EXISTS phone VARCHAR(20);
+
+-- Add request_type to school_requests (if not exists)
+ALTER TABLE school_requests ADD COLUMN IF NOT EXISTS request_type VARCHAR(50) NOT NULL DEFAULT 'NEW_SCHOOL';
+
+-- Add linked_school_id to school_requests (if not exists)
+ALTER TABLE school_requests ADD COLUMN IF NOT EXISTS linked_school_id BIGINT;
+
+-- Add foreign key constraint for linked_school_id (ignore if already exists)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints 
+                   WHERE constraint_name = 'fk_school_requests_linked_school') THEN
+        ALTER TABLE school_requests ADD CONSTRAINT fk_school_requests_linked_school 
+            FOREIGN KEY (linked_school_id) REFERENCES schools(id) ON DELETE CASCADE;
+    END IF;
+END $$;
+
+-- Add created_school_id to school_requests (if not exists)
+ALTER TABLE school_requests ADD COLUMN IF NOT EXISTS created_school_id BIGINT;
+
+-- Add admin_notes to school_requests (if not exists)
+ALTER TABLE school_requests ADD COLUMN IF NOT EXISTS admin_notes TEXT;
